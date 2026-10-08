@@ -37,6 +37,14 @@ package com.paytm.seatreservation.repository;
 	            @Param("newStatus") SeatStatus newStatus,
 	            @Param("availableStatus") SeatStatus availableStatus
 	    );
+	    
+	    List<Seat> findByReservationIdOrderBySeatNumber(Long reservationId);
+	    
+	    long countByShowIdAndBookedByUserAndStatus(
+	            Long showId,
+	            String bookedByUser,
+	            SeatStatus status
+	    );
 	}
 
 
