@@ -34,4 +34,15 @@ public class ReservationController {
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
+	
+	
+	@PostMapping("/reservations/{reservationId}/cancel")
+	public ResponseEntity<ReservationResponse> cancel(
+	        @PathVariable Long reservationId) {
+
+	    ReservationResponse response =
+	            reservationService.cancel(reservationId);
+
+	    return ResponseEntity.ok(response);
+	}
 }

@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.paytm.seatreservation.util.RequestHashUtil;
 import com.paytm.seatreservation.exception.IdempotencyConflictException;
+import com.paytm.seatreservation.exception.ReservationAlreadyCancelledException;
+import com.paytm.seatreservation.exception.ReservationNotFoundException;
+
 import java.util.List;
 import com.paytm.seatreservation.exception.SeatNotAvailableException;
 import com.paytm.seatreservation.exception.BookingLimitExceededException;
@@ -168,6 +171,63 @@ public class ReservationService {
 	                seats,
 	                reservation.getTotalAmountPaise(),
 	                reservation.getStatus().name());
+	    }
+	    
+	    
+	    
+	    
+	    @Transactional
+	    public ReservationResponse cancel(Long reservationId) {
+
+	        Authentication authentication =
+	                SecurityContextHolder.getContext()
+	                        .getAuthentication();
+
+	        AuthenticatedUser authenticatedUser =
+	                (AuthenticatedUser) authentication.getPrincipal();
+
+	        String userId = authenticatedUser.userId();
+
+	        Reservation reservation =
+	                reservationRepository
+	                        .findByIdAndBookedByUser(
+	                                reservationId,
+	                                userId)
+	                        .orElseThrow(() ->
+	                                new ReservationNotFoundException(
+	                                        "Reservation not found"));
+
+	        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
+	            throw new ReservationAlreadyCancelledException(
+	                    "Reservation is already cancelled");
+	        }
+
+	        List<String> cancelledSeats =
+	                seatRepository
+	                        .findByReservationIdOrderBySeatNumber(
+	                                reservationId)
+	                        .stream()
+	                        .map(Seat::getSeatNumber)
+	                        .toList();
+
+	        reservation.setStatus(ReservationStatus.CANCELLED);
+
+	        seatRepository.releaseSeats(
+	                reservationId,
+	                SeatStatus.AVAILABLE,
+	                SeatStatus.CONFIRMED
+	        );
+
+	        reservationRepository.save(reservation);
+
+	        return new ReservationResponse(
+	                reservation.getId(),
+	                reservation.getShow().getId(),
+	                reservation.getBookedByUser(),
+	                cancelledSeats,
+	                reservation.getTotalAmountPaise(),
+	                reservation.getStatus().name()
+	        );
 	    }
 	}
 

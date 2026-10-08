@@ -45,6 +45,22 @@ package com.paytm.seatreservation.repository;
 	            String bookedByUser,
 	            SeatStatus status
 	    );
+	    
+	    
+	    @Modifying
+	    @Query("""
+	        UPDATE Seat s
+	        SET s.status = :availableStatus,
+	            s.bookedByUser = NULL,
+	            s.reservationId = NULL
+	        WHERE s.reservationId = :reservationId
+	          AND s.status = :confirmedStatus
+	        """)
+	    int releaseSeats(
+	            @Param("reservationId") Long reservationId,
+	            @Param("availableStatus") SeatStatus availableStatus,
+	            @Param("confirmedStatus") SeatStatus confirmedStatus
+	    );
 	}
 
 

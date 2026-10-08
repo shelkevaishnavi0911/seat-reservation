@@ -25,4 +25,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 	        String bookedByUser,
 	        ReservationStatus status
 	);
+	
+	Optional<Reservation> findByIdAndBookedByUser(
+	        Long reservationId,
+	        String bookedByUser
+	);
 }
