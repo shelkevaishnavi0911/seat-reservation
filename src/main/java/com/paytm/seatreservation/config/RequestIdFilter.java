@@ -11,6 +11,7 @@ package com.paytm.seatreservation.config;
 
 	import java.io.IOException;
 	import java.util.UUID;
+	import org.slf4j.MDC;
 
 	@Component
 	public class RequestIdFilter extends OncePerRequestFilter {
@@ -31,10 +32,15 @@ package com.paytm.seatreservation.config;
 	        }
 
 	        response.setHeader(REQUEST_ID_HEADER, requestId);
-
 	        request.setAttribute(REQUEST_ID_HEADER, requestId);
 
-	        filterChain.doFilter(request, response);
+	        MDC.put("requestId", requestId);
+
+	        try {
+	            filterChain.doFilter(request, response);
+	        } finally {
+	            MDC.remove("requestId");
+	        }
 	    }
 	}
 

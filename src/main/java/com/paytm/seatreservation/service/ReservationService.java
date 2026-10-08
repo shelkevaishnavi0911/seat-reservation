@@ -24,6 +24,7 @@ import com.paytm.seatreservation.exception.ReservationNotFoundException;
 import java.util.List;
 import com.paytm.seatreservation.exception.SeatNotAvailableException;
 import com.paytm.seatreservation.exception.BookingLimitExceededException;
+import io.micrometer.core.instrument.MeterRegistry;
 
 @Service
 public class ReservationService {
@@ -32,15 +33,18 @@ public class ReservationService {
 	    private final ShowRepository showRepository;
 	    private final SeatRepository seatRepository;
 	    private final ReservationRepository reservationRepository;
-
+	    private final MeterRegistry meterRegistry;
+	    
 	    public ReservationService(
 	            ShowRepository showRepository,
 	            SeatRepository seatRepository,
-	            ReservationRepository reservationRepository) {
+	            ReservationRepository reservationRepository,
+	            MeterRegistry meterRegistry) {
 
 	        this.showRepository = showRepository;
 	        this.seatRepository = seatRepository;
 	        this.reservationRepository = reservationRepository;
+	        this.meterRegistry = meterRegistry;
 	    }
 
 	    @Transactional
@@ -142,14 +146,14 @@ public class ReservationService {
 	                            SeatStatus.AVAILABLE);
 
 	            if (updated == 0) {
-
+	            	meterRegistry.counter("reservations.conflict").increment();
 	            	    throw new SeatNotAvailableException(
 	            	            "Seat " + seatNumber +
 	            	            " is not available");
 	            	}
 	            }
 	        
-
+	        meterRegistry.counter("reservations.success").increment();
 	        return buildResponse(savedReservation);
 	    }
 
@@ -219,6 +223,8 @@ public class ReservationService {
 	        );
 
 	        reservationRepository.save(reservation);
+
+	        meterRegistry.counter("reservations.cancelled").increment();
 
 	        return new ReservationResponse(
 	                reservation.getId(),
