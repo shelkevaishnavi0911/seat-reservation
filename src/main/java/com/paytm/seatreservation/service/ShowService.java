@@ -10,6 +10,7 @@ import com.paytm.seatreservation.dto.ShowDetailsResponse;
 import com.paytm.seatreservation.entity.Seat;
 import com.paytm.seatreservation.entity.SeatStatus;
 import com.paytm.seatreservation.entity.Show;
+import com.paytm.seatreservation.exception.ShowNotFoundException;
 import com.paytm.seatreservation.repository.SeatRepository;
 import com.paytm.seatreservation.repository.ShowRepository;
 
@@ -50,7 +51,7 @@ public class ShowService {
 
 	    Show show = showRepository.findById(showId)
 	            .orElseThrow(() ->
-	                    new RuntimeException("Show not found"));
+	                    new ShowNotFoundException("Show not found"));
 
 	    List<Seat> seats =
 	            seatRepository.findByShowIdOrderBySeatNumber(showId);
